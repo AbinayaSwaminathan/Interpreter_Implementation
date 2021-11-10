@@ -37,52 +37,85 @@ heap = {}
 
 heap_count = 0  # how many objects stored in the heap
 
-ns = []  # This is the handle to the namespace in the heap that holds the
+# 1.
+activation_stack = []  # This is the handle to the namespace in the heap that holds the
          # program's global variables.  See  initializeHeap  below.
 
 ### Maintenance functions for  heap  and  heap_count:
 
-def isStackEmpty():
 
-def pushstack():
+def isEmpty():
+  """check whether activation stack is empty or not"""
+  global activation_stack
+  # WRITE ME
 
-def popstack():
 
-def topstack():
+def pushHandle(handle):
+  """ push handle on the activation_stack"""
+  global activation_stack
+  # WRITE ME
+  activation_stack.append(...)
+
+def popHandle():
+  """ pop a handle from stack """
+  global activation_stack
+  # if  activation state is not empty 
+  # WRITE ME
+  if not isEmpty:
+     ....
+
+def topHandle():
+  """ return the top handel on the activation_stack"""
+  global activation_stack
+  # WRITE ME
 
 
 def activeNS():
     """returns the handle of the namespace that holds the currently visible
        program variables
     """
-    return ns
+    # WRITE ME write this function
 
+    pass
+    #return top handle on the activation stack
 
+def declare(handle, field, rval) :
+    """creates a new definition in the heap at (handle, field) and initializes
+       it with rval, provided that  heap[handle][field] does not already exist!
+       (else crashes with a "redeclaration error")
+
+       params: handle, field, as described above
+               rval -- an int or a handle
+    """
+    ## WRITE ME: # int x = 1 ["int", "x" ,"1"] heap[handle][field] = rval #heap = {handle:{field:rval}}
+    pass
+    
 def initializeHeap():
     """resets the heap for a new program"""
-    global heap_count, heap, ns
-    heap_count = 0
-    heap = {}
-    ns = allocateNS()  # create namespace in  heap  for global variables
+    global heap_count, heap, activation_stack
+    handle = allocateNS()  # create namespace in  heap  for global variables heap={'h0':{}}
+    heap[handle]['parentns'] = 'nil'
+    # WRITE ME
+    pushHandle(...)
+    
 
 
 def printHeap(): 
     """prints contents of  ns  and  heap"""
-    print("namespace =", ns)
+    print("activation stack =", activation_stack)
 
     print("heap = {")
     handles = sorted(heap.keys())
-    # handles.sort()
     for h in handles: 
         print(" ", h, ":", heap[h])
     print("}")
-
+    
 
 def allocateNS() :
     """allocates a new, empty namespace in the heap and returns its handle"""
     global heap_count
     newloc = "h" + str(heap_count)  # generate handle of form,  hn,  where  n  is an int
-    heap[newloc] = {}
+    heap[newloc] = {} # heap = {....'h4': {}}
     heap_count = heap_count + 1
     return newloc
 
@@ -106,18 +139,6 @@ def lookup(handle, field) :
     else :
         crash("invalid lookup address: " + handle + " " + field)
 
-
-def declare(handle, field, rval) :
-    """creates a new definition in the heap at (handle, field) and initializes
-       it with rval, provided that  heap[handle][field] does not already exist!
-       (else crashes with a "redeclaration error")
-
-       params: handle, field, as described above
-               rval -- an int or a handle
-    """
-    ## WRITE ME:
-    pass
-    
 
 def update(handle, field, rval) :
     """updates  rval  at heap[handle][field], provided that
