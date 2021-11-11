@@ -2,7 +2,6 @@
 ### INTERPRETER FOR OBJECT-ORIENTED LANGUAGE
 
 """The interpreter processes parse trees of this format:
-
 PTREE ::=  [DLIST, CLIST]
 
 DLIST ::=  [ DTREE* ]
@@ -24,7 +23,6 @@ ILIST ::= [ ID* ]
 ID    ::=  a nonempty string of letters
 
 NUM   ::=  a nonempty string of digits
-
 
 The interpreter computes the meaning of the parse tree, which is
 a sequence of updates to heap storage.
@@ -63,31 +61,36 @@ def interpretDLIST(dlist) :
 
 def interpretDTREE(d) :
     """pre: d  is a declaration represented as a DTREE:
-       DTREE ::=  ["int", ID, ETREE]  |  ["proc", ID, ILIST, [], CLIST] (WRITE ME)
+       DTREE ::=  ["int", ID, ETREE]  |  ["proc", ID, ILIST, [], CLIST]
        post:  heap is updated with  d
     """
-    ### WRITE ME
-    active_ns = ....
-    
-    # ["int", ID, ETREE]  |  ["proc", ID, ILIST, [], CLIST]
-    # ["int", "x", "2"]  |  ["proc", "p", ['y', 'z'], [], [...]]
-    if d[0] == 'int': # d = ["int", ID, ETREE] 
+    ns = activeNS()
+    if d[0] == "int": 
+        var = d[1]                                       #["int", ID, ETREE]
+        #check sanity -- var is declared or not 
+        val = interpretETREE(d[2])
+        # heap[ns][var] = val
+        printHeap()
+        print(ns, var, val)
+        declare(ns, var, val)
+        printHeap()
+
+ 
+    if d[0] == "proc":  #["proc", ID, ILIST, [], CLIST]
         var = d[1]
-        val = interpretETREE(...)
-        declare(active_ns, var, val)
-    # ["proc", ID, ILIST, [], CLIST]
-    if d[0] == 'proc': 
-        proc_name = d[1]
-        param_list = ...
-        cmd_list = ...
-        handle = allocNS() # heap[handle] = {}
-        declare(....) # heap = {active_ns: {..., proc_name:handle, ...}}
-        heap[handle]['type'] = 'proc'
-        heap[handle]['params'] = ...
-        heap[handle]['local'] = []
-        heap[handle]['body'] = ...
-        heap[handle]['parentns'] = ...
+        closure_handle = allocateNS()
+        #heap[ns][var] = handle   #var exists or not
+        declare(ns, var, closure_handle)
+
+        heap[closure_handle]["body"] = d[4]
+        heap[closure_handle]["params"] = d[2]
+        heap[closure_handle]["type"] = "proc"
+        heap[closure_handle]["link"] = ns
     
+
+     ### WRITE ME
+    
+
 
 
 def interpretCLIST(clist) :
@@ -101,9 +104,15 @@ def interpretCLIST(clist) :
 
 def interpretCTREE(c) :
     """pre: c  is a command represented as a CTREE:
-       CTREE ::=  (WRITE ME) ["=", LTREE, ETREE]  |  ["if", ETREE, CLIST, CLIST]
+        CTREE ::=  ["=", LTREE, ETREE]  |  ["if", ETREE, CLIST, CLIST]
         |  ["print", ETREE]  |  ["call", LTREE, ELIST]
        post:  heap  holds the updates commanded by  c
+
+       (i) Compute the meaning of L, verify that the meaning is the handle to a procedure closure, and extract from that closure these parts: IL, CL, and parentns link. (If L is not bound to a handle of a proc closure, it's an error that stops execution.) 
+       (ii) evaluate EL to a list of values 
+       (iii) Allocate a new namespace.
+       (iv) Within the new namespace, bind parentns to the handle extracted from the closure; bind the values from EL to the corresponding names in IL. (Make certain that the number of arguments in EL equals the number of parameters in IL. Otherwise, it's an error that prints a message and stops execution). 
+       (v) Push the new namespace's handle onto the activation stack, execute CL, and upon completion pop the activation stack.
     """
     operator = c[0]
     if operator == "=" :   # , ["=", LTREE, ETREE]
@@ -118,32 +127,53 @@ def interpretCTREE(c) :
         if test != 0 :
             interpretCLIST(c[2])
         else :
-            interpretCLIST(c[3]) 
-    # WRITE ME 
-    # interpret ["call", LTREE, ELIST] # ["call", "p", ['1', '2']] if proc p(x, y):...
+            interpretCLIST(c[3])
+    # ["call", LTREE, ELIST]
     elif operator == "call":
-        # 1. find where proc closure, extract params, body, parentns...
-        handle, proc_name = interpretLTREE(...)
-        # 2. look up all the following from p's handle
-        param_list = lookup(handle, 'params')
-        ...
-        ....
-        cmd_list = lookup(handle, 'body')
+    # (i) Compute the meaning of L, verify that the meaning is the handle to a procedure closure,
+        # and extract from that closure these parts: IL, CL, and parentns link.
+        # (If L is not bound to a handle of a proc closure, it's an error that stops execution.) 
+      
+        ns, proc_name = interpretLTREE(c[1]) # "h0", "p"
+        closure_handle = lookup(ns, proc_name)
+        
+        if isinstance(closure_handle, int):
+            crash("....")
+        #if closure_handle is string: then proc_name is valid name of a procedure
+        if isinstance(closure_handle, str):
+            params_list = closure_handle["params"]    # ["a", "b""] if we have declaured proc p(a, b):...
+            proc_body = closure_handle["body"]
+            parentens = closure_handle["link"]
+
+         # (ii) evaluate EL to a list of values
+         # c[2], is ["2", "3"] if p(2, 3)
+        actual_params = []
+        for e in c[2]:
+            temp=interpretETREE(e)
+            actual_params.append(temp)
 
 
-        # 4.
-        newNS = ...
-        pushHandle(newNS) # for example activation_stack = ['h0', 'h2']
-        heap[newNS]['parentns'] = ...
-        #evaluate EL=c[2] to a list of values
-        if len(param_list) == len(c[2]):
-            for param, e in zip(param_list, c[2]):
-                v = interpretETREE(...)
-                heap[newNS][param] = ...  # heap = {..., 'h2': {'a': 1, 'b':2}} if proc p(a, b):...end p (1, 2)
+        #(iii) Allocate a new namespace.
+        new_ns = allocateNS()
 
-        interpretCLIST(...)
+
+
+       # (iv) Within the new namespace, bind parentns to the handle extracted from the closure
+              # bind the values from EL to the corresponding names in IL.
+       # (Make certain that the number of arguments in EL equals the number of parameters in IL. 
+       # Otherwise, it's an error that prints a message and stops execution). 
+        heap[new_ns]["parentens"]= parentens
+        if len(params_list)== len(actual_params):
+            for params, actual_params in zip(params_list,actual_params):
+                heap[new_ns][params]= actual_params
+        else:
+            crash("error parameter no. doesn't match")
+       # (v) Push the new namespace's handle onto the activation stack, execute CL, 
+       # and upon completion pop the activation stack.
+        pushHandle(new_ns)
+        interpretCLIST(proc_body)
         popHandle()
-
+        del heap[new_ns]
     else :  crash(c, "invalid command")
 
 
@@ -176,7 +206,6 @@ def interpretLTREE(ltree) :
           LTREE ::=  ID
        post: returns a pair,  (handle,varname),  the L-value of  ltree
     """
-    # WRITE ME: MODIFY THE FUCNTION 
     if isinstance(ltree, str) and  ltree[0].isalpha()  :  #  ID 
         ans = (activeNS(), ltree)   # use the handle to the active namespace
     else :
