@@ -212,8 +212,7 @@ def interpretLTREE(ltree) :
             #check if ltree is in current active_ns if not find the parent ns
         if ltree not in heap[active_ns]:
             parentns=heap[active_ns]["parentns"]
-        elif ltree in heap['parentns']
-        ans = (activeNS(), ltree)   # use the handle to the active namespace
+        ans = (active_ns, ltree)   # use the handle to the active namespace
     else :
         crash(ltree, "illegal L-value")
     return ans
