@@ -141,12 +141,12 @@ def lookup(handle, field) :
        returns: The function extracts the object at  heap[handle],
                 indexes it with field,  and returns  (heap[handle])[field]
     """
+    printHeap()
     if isLValid(handle, field) :
         return  heap[handle][field]
     else :
         crash("invalid lookup address: " + handle + " " + field)
-
-
+    
 
 
 def update(handle, field, rval) :
