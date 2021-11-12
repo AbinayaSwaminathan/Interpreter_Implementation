@@ -1,4 +1,4 @@
-
+    
 ### INTERPRETER FOR OBJECT-ORIENTED LANGUAGE
 
 """The interpreter processes parse trees of this format:
@@ -211,8 +211,11 @@ def interpretLTREE(ltree) :
         active_ns=activeNS()
             #check if ltree is in current active_ns if not find the parent ns
         if ltree not in heap[active_ns]:
-            parentns=heap[active_ns]["parentns"]
-        ans = (active_ns, ltree)   # use the handle to the active namespace
+            parentns = heap[active_ns]["parentns"]
+            #if ltree in heap[parentns]:
+            ans = (parentns, ltree)   # use the handle to the active namespace
+        else:
+            ans=(active_ns,ltree)
     else :
         crash(ltree, "illegal L-value")
     return ans
