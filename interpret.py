@@ -70,10 +70,10 @@ def interpretDTREE(d) :
         #check sanity -- var is declared or not 
         val = interpretETREE(d[2])
         # heap[ns][var] = val
-        printHeap()
-        print(ns, var, val)
+        #printHeap()
+        #print(ns, var, val)
         declare(ns, var, val)
-        printHeap()
+        #printHeap()
 
  
     if d[0] == "proc":  #["proc", ID, ILIST, [], CLIST]
@@ -141,9 +141,9 @@ def interpretCTREE(c) :
             crash("....")
         #if closure_handle is string: then proc_name is valid name of a procedure
         if isinstance(closure_handle, str):
-            params_list = closure_handle["params"]    # ["a", "b""] if we have declaured proc p(a, b):...
-            proc_body = closure_handle["body"]
-            parentens = closure_handle["link"]
+            params_list = lookup(closure_handle,"params")   # ["a", "b""] if we have declaured proc p(a, b):...
+            proc_body = lookup(closure_handle,"body")
+            parentns = lookup(closure_handle,"link")
 
          # (ii) evaluate EL to a list of values
          # c[2], is ["2", "3"] if p(2, 3)
@@ -162,7 +162,7 @@ def interpretCTREE(c) :
               # bind the values from EL to the corresponding names in IL.
        # (Make certain that the number of arguments in EL equals the number of parameters in IL. 
        # Otherwise, it's an error that prints a message and stops execution). 
-        heap[new_ns]["parentens"]= parentens
+        heap[new_ns]["parentns"]= parentns
         if len(params_list)== len(actual_params):
             for params, actual_params in zip(params_list,actual_params):
                 heap[new_ns][params]= actual_params
@@ -206,7 +206,13 @@ def interpretLTREE(ltree) :
           LTREE ::=  ID
        post: returns a pair,  (handle,varname),  the L-value of  ltree
     """
-    if isinstance(ltree, str) and  ltree[0].isalpha()  :  #  ID 
+    
+    if isinstance(ltree, str) and  ltree[0].isalpha()  :  #  ID
+        active_ns=activeNS()
+            #check if ltree is in current active_ns if not find the parent ns
+        if ltree not in heap[active_ns]:
+            parentns=heap[active_ns]["parentns"]
+        elif ltree in heap['parentns']
         ans = (activeNS(), ltree)   # use the handle to the active namespace
     else :
         crash(ltree, "illegal L-value")
