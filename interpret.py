@@ -74,8 +74,7 @@ def interpretDTREE(d) :
         #print(ns, var, val)
         declare(ns, var, val)
         #printHeap()
-
- 
+        
     if d[0] == "proc":  #["proc", ID, ILIST, [], CLIST]
         var = d[1]
         closure_handle = allocateNS()
@@ -87,12 +86,8 @@ def interpretDTREE(d) :
         heap[closure_handle]["type"] = "proc"
         heap[closure_handle]["link"] = ns
     
-
      ### WRITE ME
     
-
-
-
 def interpretCLIST(clist) :
     """pre: clist  is a list of commands,  CLIST ::=  [ CTREE+ ]
                   where  CTREE+  means  one or more CTREEs
@@ -138,7 +133,7 @@ def interpretCTREE(c) :
         closure_handle = lookup(ns, proc_name)
         
         if isinstance(closure_handle, int):
-            crash("....")
+            crash(c, "LTREE is not bound to handle proc closure")
         #if closure_handle is string: then proc_name is valid name of a procedure
         if isinstance(closure_handle, str):
             params_list = lookup(closure_handle,"params")   # ["a", "b""] if we have declaured proc p(a, b):...
@@ -152,11 +147,8 @@ def interpretCTREE(c) :
             temp=interpretETREE(e)
             actual_params.append(temp)
 
-
         #(iii) Allocate a new namespace.
         new_ns = allocateNS()
-
-
 
        # (iv) Within the new namespace, bind parentns to the handle extracted from the closure
               # bind the values from EL to the corresponding names in IL.
@@ -167,7 +159,7 @@ def interpretCTREE(c) :
             for params, actual_params in zip(params_list,actual_params):
                 heap[new_ns][params]= actual_params
         else:
-            crash("error parameter no. doesn't match")
+            crash(c,"error parameter number doesn't match")
        # (v) Push the new namespace's handle onto the activation stack, execute CL, 
        # and upon completion pop the activation stack.
         pushHandle(new_ns)
@@ -212,8 +204,10 @@ def interpretLTREE(ltree) :
             #check if ltree is in current active_ns if not find the parent ns
         if ltree not in heap[active_ns]:
             parentns = heap[active_ns]["parentns"]
+            if parentns == "nil":
+                crash(ltree, "variable in parentns is not declared")
             if ltree in heap[parentns]:
-                ans = (parentns, ltree)
+                ans = (parentns, ltree)                
         else:
             ans=(active_ns,ltree)# use the handle to the active namespace
     else :
