@@ -141,7 +141,7 @@ def lookup(handle, field) :
        returns: The function extracts the object at  heap[handle],
                 indexes it with field,  and returns  (heap[handle])[field]
     """
-    printHeap()
+    #printHeap()
     if isLValid(handle, field) :
         return  heap[handle][field]
     else :
