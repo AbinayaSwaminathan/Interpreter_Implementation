@@ -145,7 +145,7 @@ heap = {
 Test case 6:
 
 int x = 2;
-proc p():
+proc p(): 
    int y = 3;
    proc q() :
       int z = (x + y);
