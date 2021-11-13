@@ -207,8 +207,7 @@ def interpretLTREE(ltree) :
             if parentns == "nil":
                 crash(ltree,"variable in parentns is not declared")
             elif ltree in heap[parentns]:
-                ans = (parentns, ltree)
-                
+                ans = (parentns, ltree)         
         else:
             ans=(active_ns,ltree)# use the handle to the active namespace
     else :
