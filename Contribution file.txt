@@ -3,7 +3,7 @@ Group Members:
 Abinaya Swaminathan - yf7584
 Aishwarya Kulkarni - dy4630
 Aishwarya Pramukh - ap3286
-Gauri - rg4087
+Gauri Sanjay Salunkh - rg4087
 
 
 1.HeapModule.py and dtree changes - Aishwarya kulkarni & Gauri
