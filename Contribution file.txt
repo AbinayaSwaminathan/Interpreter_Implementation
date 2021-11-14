@@ -1,0 +1,12 @@
+Group Members:
+
+Abinaya Swaminathan - yf7584
+Aishwarya Kulkarni - dy4630
+Aishwarya Pramukh - ap3286
+Gauri - rg4087
+
+
+1.HeapModule.py and dtree changes - Aishwarya kulkarni & Gauri
+2.L tree - Abinaya
+3. Checking for test cases- Aishwarya Pramukh
+4 C tree- by everyone
