@@ -109,52 +109,33 @@ Output should print 2 and then 9.  When 9 is printed, the activation stack will 
 
 
 
-
-IV. Adding local declarations:
-
 Test case 5:
 
-int x = 2;
-proc p(y) : 
-    int z = x; 
-    print z; x = (y+1) end;
-p(5);
+int x=2;
+x();
 
-Output should be:
-
+Output :
 Parse tree:
-[[['int', 'x', '2'], ['proc', 'p', ['y'], [['int', 'z', ['deref', 'x']]], [['print', ['deref', 'z']], ['=', 'x', ['+', ['deref', 'y'], '1']]]]], [['call', 'p',['5']]]]
+[[['int', 'x', '2']], [['call', 'x', []]]]
 Execution:
-2
-activation stack = ['h0', 'h2']
+Error evaluating tree: ['call', 'x', []]
+LTREE is not bound to handle proc closure
+Crash!
+activation_stack = ['h0']
 heap = {
-  h0 : {'parentns': 'nil', 'p': 'h1', 'x': 2}
-  h1 : {'body': [['print', ['deref', 'z']], ['=', 'x', ['+', ['deref', 'y'], '1']]], 'params': ['y'], 'type': 'proc', 'link': 'h0', 'locals': [['int', 'z', ['deref', 'x']]]}
-  h2 : {'y': 5, 'parentns': 'h0', 'z': 2}
+  h0 : {'parentns': 'nil', 'x': 2}
 }
-Successful termination.
-activation stack = ['h0']
-heap = {
-  h0 : {'parentns': 'nil', 'p': 'h1', 'x': 6}
-  h1 : {'body': [['print', ['deref', 'z']], ['=', 'x', ['+', ['deref', 'y'], '1']]], 'params': ['y'], 'type': 'proc', 'link': 'h0', 'locals': [['int', 'z', ['deref', 'x']]]}
-  h2 : {'y': 5, 'parentns': 'h0', 'z': 2}
-}
-
-
-
-Test case 6:
-
-int x = 2;
-proc p(): 
-   int y = 3;
-   proc q() :
-      int z = (x + y);
-      print z;
-   end;
-   q()
-end;
-p()
-
-Output should print 5 and an activation stack of three handles.
+Traceback (most recent call last):
+  File "/Users/abiprem/Desktop/PLCProject2/run.py", line 29, in <module>
+    interpret.interpretPTREE(tree)
+  File "/Users/abiprem/Desktop/PLCProject2/interpret.py", line 49, in interpretPTREE
+    interpretCLIST(tree[1])
+  File "/Users/abiprem/Desktop/PLCProject2/interpret.py", line 97, in interpretCLIST
+    interpretCTREE(command)
+  File "/Users/abiprem/Desktop/PLCProject2/interpret.py", line 136, in interpretCTREE
+    crash(c, "LTREE is not bound to handle proc closure")
+  File "/Users/abiprem/Desktop/PLCProject2/interpret.py", line 226, in crash
+    raise Exception   # stops the interpreter
+Exception
 
 
