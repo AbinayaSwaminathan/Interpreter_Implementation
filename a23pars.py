@@ -297,7 +297,7 @@ def p_empty(p):
 #### Parse Error handler : prints location of error and quits parser
 def p_error(p):
     print("SYNTAX ERROR at LexToken(grammar_phrase, input_word, line_number, char_number):")
-    print((15 * " "), p)
+    print (15 * " "), p
     print("PARSER QUITS.")
     raise Exception
 
