@@ -87,21 +87,38 @@ def interpretDTREE(d) :
         heap[closure_handle]["type"] = "proc"
         heap[closure_handle]["link"] = ns
     
-     ### WRITE ME
+    # Part C
+    # 1. WRITE ME for object declaration
+    # syntax: ob I = new T or ob I = "nil"
+    # parser tree ["ob", ID, ETREE]
      
     elif d[0] =="ob":
-        obHandle = d[1]                                       #[["ob", ID, ETREE]
+        var= d[1]                                       #[["ob", ID, ETREE]
         # computes the meaning of E
-        object_handle = allocateNS()
-        fields = interpretETREE(d[2])
+        object_handle = interpretETREE(d[2])
         #validates that E is either a handle to an object or is nil,
         if isinstance(object_handle,ob):
             #(iii) binds ID to the meaning in the active namespace
             # (provided that ID is not already declared there).
-            heap[object_handle][obHandle]=active_ns
-            declare(ns,obHandle,closure_handle)
+           # heap[object_handle][obHandle]=active_ns
+            declare(ns,var,object_handle)
         else:
             crash(c, "ETREE is not bound to handle object closure")
+    
+        # Part D: WRITE ME
+    # implement ["class", ID, TTREE],
+    # which behaves like procedure declaration,
+    # that is, ID is bound to a closure containing TTREE
+    # and its link to global variables.
+
+    elif d[0] == "class" :   # ["class", ID, TTREE]
+        # WRITE ME
+        var=d[1]
+        closure_handle=interpretTTREE(d[2])
+        declare(ns,var,closure_handle)
+        
+    else :
+        crash(d, "invalid declaration")
         
         
         
@@ -209,8 +226,8 @@ def interpretETREE(etree) :
         handle, field = interpretLTREE(etree[1])
         ans = lookup(handle,field)
     elif etree[0] == "new":         #["new", TTREE]
-        handle, field = interpretTTREE(etree[1])
-        ans = lookup(handle,field)
+       # handle, field = interpretTTREE(etree[1])
+        ans = interpretTTREE(etree[1])
     elif isinstance(etree,str) and (etree == "nil"):            #nil
         ans=etree
     else :  crash(etree, "invalid expression form")
@@ -239,28 +256,27 @@ def interpretTTREE(ttree):
     #evaluate DLIST
         interpretDLIST(ttree[1])
     #pops the activation stack and returns the popped handle as its answer.
-    ans = popHandle()
+        ans = popHandle()
     # Part D: WRITE ME
     elif ttree[0] == "call" :    # ["call", LTREE]
         '''This works like procedure call, where
          the closure labelled by the handle is extracted from the heap,
          and provided that the closure holds a class,
          the TTREE within the closure is extracted and executed.
-         '''
+        '''
         # (i) LTREE is computed to a class handle,
         # the closure labelled by the handle is extracted from the heap
 
-        ns, className = "# WRITE ME"
-        classHandle = "# WRITE ME"
+        ns, className = interpretLTREE(ttree[1])
+        classHandle = lookup(ns,className)
 
         #provided that the closure holds a class,
         if lookup(classHandle,"type") ==  "class":
             # then the TTREE within the closure is extracted and executed.
-            body = "# WRITE ME "
+            body = lookup(classHandle,"body")
 
             pushHandle(ns)
-            ans = "# WRITE ME "
-            popHandle()
+            ans = popHandle()
             update(ans, "parentns", activeNS())
 
         else :
@@ -297,8 +313,8 @@ def interpretLTREE(ltree) :
         han,nam=interpretLTREE(ltree[1])
         h=lookup(lval)
         # check if the pair, (h, ID) is a valid L-value
-        if "# WRITE ME" :
-            ans = "# WRITE ME"  # compute the vlaue of
+        if isinstance(h,ltree[0]) :
+            ans = (handle, ltree[2])  # compute the value of
         else :
             crash(ltree, "field not defined in the object")
         #ans=(handle,tree[2])
