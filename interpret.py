@@ -6,7 +6,7 @@ PTREE ::=  [DLIST, CLIST]
 
 DLIST ::=  [ DTREE* ]
            where  DTREE*  means zero or more DTREEs
-DTREE ::=  ["int", ID, ETREE]  |  ["proc", ID, ILIST, [], CLIST]
+DTREE ::=  ["int", ID, ETREE]  |  ["proc", ID, ILIST, [], CLIST] | ["ob", ID, ETREE]
            (note: the [] in the "proc" operator tree will be used in Part B)
 
 CLIST ::=  [ CTREE* ]
@@ -14,12 +14,13 @@ CTREE ::=  ["=", LTREE, ETREE]  |  ["if", ETREE, CLIST, CLIST]
         |  ["print", ETREE]  |  ["call", LTREE, ELIST]
 
 ELIST ::=   [ ETREE* ]
-ETREE ::=  NUM  |  [OP, ETREE, ETREE] |  ["deref", LTREE]  
+ETREE ::=  NUM  |  [OP, ETREE, ETREE] |  ["deref", LTREE]   | "nil" | ["new", TTREE]
       where  OP ::=  "+"  | "-"
 
-LTREE ::=  ID
+TTREE ::= ["struct", DLIST]
+LTREE ::=  ID| ["dot",LTREE,ID]
 
-ILIST ::= [ ID* ]
+ILIST ::= [ ID* ] | ["dot", LTREE, ID]
 ID    ::=  a nonempty string of letters
 
 NUM   ::=  a nonempty string of digits
@@ -61,7 +62,7 @@ def interpretDLIST(dlist) :
 
 def interpretDTREE(d) :
     """pre: d  is a declaration represented as a DTREE:
-       DTREE ::=  ["int", ID, ETREE]  |  ["proc", ID, ILIST, [], CLIST]
+       DTREE ::=  ["int", ID, ETREE]  |  ["proc", ID, ILIST, [], CLIST] |  ["ob", ID, ETREE] |  ["class", ID, TTREE]
        post:  heap is updated with  d
     """
     ns = activeNS()
@@ -75,7 +76,7 @@ def interpretDTREE(d) :
         declare(ns, var, val)
         #printHeap()
         
-    if d[0] == "proc":  #["proc", ID, ILIST, [], CLIST]
+    elif d[0] == "proc":                         #["proc", ID, ILIST, [], CLIST]
         var = d[1]
         closure_handle = allocateNS()
         #heap[ns][var] = handle   #var exists or not
@@ -87,6 +88,24 @@ def interpretDTREE(d) :
         heap[closure_handle]["link"] = ns
     
      ### WRITE ME
+     
+    elif d[0] =="ob":
+        obHandle = d[1]                                       #[["ob", ID, ETREE]
+        # computes the meaning of E
+        object_handle = allocateNS()
+        fields = interpretETREE(d[2])
+        #validates that E is either a handle to an object or is nil,
+        if isinstance(object_handle,ob):
+            #(iii) binds ID to the meaning in the active namespace
+            # (provided that ID is not already declared there).
+            heap[object_handle][obHandle]=active_ns
+            declare(ns,obHandle,closure_handle)
+        else:
+            crash(c, "ETREE is not bound to handle object closure")
+        
+        
+        
+
     
 def interpretCLIST(clist) :
     """pre: clist  is a list of commands,  CLIST ::=  [ CTREE+ ]
@@ -171,7 +190,7 @@ def interpretCTREE(c) :
 
 def interpretETREE(etree) :
     """interpretETREE computes the meaning of an expression operator tree.
-         ETREE ::=  NUM  |  [OP, ETREE, ETREE] |  ["deref", LTREE] 
+         ETREE ::=  NUM  |  [OP, ETREE, ETREE] |  ["deref", LTREE] | nil | ["new", TTREE]
          OP ::= "+" | "-"
         post: updates the heap as needed and returns the  etree's value
     """
@@ -189,16 +208,79 @@ def interpretETREE(etree) :
     elif  etree[0] == "deref" :    # ["deref", LTREE]
         handle, field = interpretLTREE(etree[1])
         ans = lookup(handle,field)
+    elif etree[0] == "new":         #["new", TTREE]
+        handle, field = interpretTTREE(etree[1])
+        ans = lookup(handle,field)
+    elif isinstance(etree,str) and (etree == "nil"):            #nil
+        ans=etree
     else :  crash(etree, "invalid expression form")
     return ans
 
+def interpretTTREE(ttree):
+    """TTREE ::= ["struct", DLIST] | ["call",LTREE]"""
+    """
+            Part C: add interpretation for : TTREE ::=  ["struct", DLIST]
+
+        You define def interpretTTREE(ttree).
+        It receives arguments of the form, ["struct", DLIST].
+        The function does this:
+        (i) allocates a new namespace and pushes the namespace's handle on
+        the activation stack;
+        (ii) evaluates DLIST;
+        (iii)pops the activation stack and returns the popped handle as its answer.
+    """
+    global activeStack
+    ans = "" # returned variable
+    if ttree[0] == "struct":
+    #allocates a new namespace
+        new_ns = allocateNS()
+    #push the namespace's handle on the activation stack
+        pushHandle(new_ns)
+    #evaluate DLIST
+        interpretDLIST(ttree[1])
+    #pops the activation stack and returns the popped handle as its answer.
+    ans = popHandle()
+    # Part D: WRITE ME
+    elif ttree[0] == "call" :    # ["call", LTREE]
+        '''This works like procedure call, where
+         the closure labelled by the handle is extracted from the heap,
+         and provided that the closure holds a class,
+         the TTREE within the closure is extracted and executed.
+         '''
+        # (i) LTREE is computed to a class handle,
+        # the closure labelled by the handle is extracted from the heap
+
+        ns, className = "# WRITE ME"
+        classHandle = "# WRITE ME"
+
+        #provided that the closure holds a class,
+        if lookup(classHandle,"type") ==  "class":
+            # then the TTREE within the closure is extracted and executed.
+            body = "# WRITE ME "
+
+            pushHandle(ns)
+            ans = "# WRITE ME "
+            popHandle()
+            update(ans, "parentns", activeNS())
+
+        else :
+            crash(ttree, "invalid classname, cannot create object")
+    
+    else :
+        crash(ttree, "ttree is not a struct paser tree")
+    return ans
 
 def interpretLTREE(ltree) :
     """interpretLTREE computes the meaning of a lefthandside operator tree.
-          LTREE ::=  ID
+          LTREE ::=  ID | ["dot",LTREE,ID]
        post: returns a pair,  (handle,varname),  the L-value of  ltree
     """
-    
+    """
+    Part C: implement ["dot", LTREE, ID].
+    This means you compute the handle named by LTREE,
+    call it h, and then check if the pair, (h,ID) is a valid L-value
+    (that is, variable ID is a field inside the object named by h).
+    """
     if isinstance(ltree, str) and  ltree[0].isalpha()  :  #  ID
         active_ns=activeNS()
             #check if ltree is in current active_ns if not find the parent ns
@@ -210,10 +292,21 @@ def interpretLTREE(ltree) :
                 ans = (parentns, ltree)         
         else:
             ans=(active_ns,ltree)# use the handle to the active namespace
+    elif isinstance(ltree, list) and ltree[0]=="dot":#["dot", LTREE, ID]
+        # compute the handle named by LTREE
+        han,nam=interpretLTREE(ltree[1])
+        h=lookup(lval)
+        # check if the pair, (h, ID) is a valid L-value
+        if "# WRITE ME" :
+            ans = "# WRITE ME"  # compute the vlaue of
+        else :
+            crash(ltree, "field not defined in the object")
+        #ans=(handle,tree[2])
+        
     else :
         crash(ltree, "illegal L-value")
     return ans
-
+ 
 
 def crash(tree, message) :
     """pre: tree is a parse tree,  and  message is a string
