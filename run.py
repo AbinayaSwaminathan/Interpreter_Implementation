@@ -17,10 +17,10 @@ try:
         print("  as the first symbol on a line by itself:")
         print()
         text = ""
-        line = input("")
+        line = raw_input("")
         while line == ""  or  line[0] != "!" :
            text = text + " " + line + "\n"
-           line = input("")
+           line = raw_input("")
 
     tree = a23pars.parse(text)
     print("Parse tree:")
