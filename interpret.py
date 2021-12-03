@@ -27,14 +27,14 @@ NUM   ::=  a nonempty string of digits
 
 The interpreter computes the meaning of the parse tree, which is
 a sequence of updates to heap storage.
-
+ß
 You will extend the above to include declarations and calls of parameterized
 procedures.
 """
 
 
 from heapmodule import *   # import the contents of the  heapmodule.py  module 
-
+import pdb
 
 ### INTERPRETER FUNCTIONS, one for each class of parse tree listed above.
 #   See the end of program for the driver function,  interpretPTREE
@@ -97,13 +97,13 @@ def interpretDTREE(d) :
         # computes the meaning of E
         object_handle = interpretETREE(d[2])
         #validates that E is either a handle to an object or is nil,
-        if isinstance(object_handle,ob):
+        if isinstance(object_handle,str):
             #(iii) binds ID to the meaning in the active namespace
             # (provided that ID is not already declared there).
            # heap[object_handle][obHandle]=active_ns
             declare(ns,var,object_handle)
         else:
-            crash(c, "ETREE is not bound to handle object closure")
+            crash(d, "ETREE is not bound to handle object closure")
     
         # Part D: WRITE ME
     # implement ["class", ID, TTREE],
@@ -114,8 +114,11 @@ def interpretDTREE(d) :
     elif d[0] == "class" :   # ["class", ID, TTREE]
         # WRITE ME
         var=d[1]
-        closure_handle=interpretTTREE(d[2])
+        closure_handle=allocateNS()
         declare(ns,var,closure_handle)
+        heap[closure_handle]["body"] =d[2]
+        heap[closure_handle]["type"] = "class"
+        heap[closure_handle]["link"] = ns
         
     else :
         crash(d, "invalid declaration")
@@ -224,6 +227,8 @@ def interpretETREE(etree) :
         else : crash(etree, "addition error --- nonint value used")
     elif  etree[0] == "deref" :    # ["deref", LTREE]
         handle, field = interpretLTREE(etree[1])
+        #pdb.set_trace()
+        #printHeap()
         ans = lookup(handle,field)
     elif etree[0] == "new":         #["new", TTREE]
        # handle, field = interpretTTREE(etree[1])
@@ -252,11 +257,12 @@ def interpretTTREE(ttree):
     #allocates a new namespace
         new_ns = allocateNS()
     #push the namespace's handle on the activation stack
+        declare(new_ns,"parentns",activeNS())
         pushHandle(new_ns)
     #evaluate DLIST
         interpretDLIST(ttree[1])
     #pops the activation stack and returns the popped handle as its answer.
-        ans = popHandle()
+        ans=popHandle()
     # Part D: WRITE ME
     elif ttree[0] == "call" :    # ["call", LTREE]
         '''This works like procedure call, where
@@ -271,12 +277,13 @@ def interpretTTREE(ttree):
         classHandle = lookup(ns,className)
 
         #provided that the closure holds a class,
-        if lookup(classHandle,"type") ==  "class":
+        if lookup(classHandle,"type")=="class":
             # then the TTREE within the closure is extracted and executed.
             body = lookup(classHandle,"body")
-
+            
             pushHandle(ns)
-            ans = popHandle()
+            ans=interpretTTREE(body)
+            popHandle()
             update(ans, "parentns", activeNS())
 
         else :
@@ -305,16 +312,17 @@ def interpretLTREE(ltree) :
             if parentns == "nil":
                 crash(ltree,"variable in parentns is not declared")
             elif ltree in heap[parentns]:
-                ans = (parentns, ltree)         
+                ans = (parentns, ltree)
+                print
         else:
             ans=(active_ns,ltree)# use the handle to the active namespace
     elif isinstance(ltree, list) and ltree[0]=="dot":#["dot", LTREE, ID]
         # compute the handle named by LTREE
         han,nam=interpretLTREE(ltree[1])
-        h=lookup(lval)
+        h=lookup(han,nam)
         # check if the pair, (h, ID) is a valid L-value
-        if isinstance(h,ltree[0]) :
-            ans = (handle, ltree[2])  # compute the value of
+        if isinstance(h,str) :
+            ans = (h, ltree[2])  # compute the value of
         else :
             crash(ltree, "field not defined in the object")
         #ans=(handle,tree[2])
